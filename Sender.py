@@ -207,13 +207,13 @@ LOGIN_CSS = """
 def get_logo_path():
     """Retourne le chemin correct vers le logo"""
     possible_paths = [
-        "Logo.png",
-        "./Logo.png",
-        "app/Logo.png",
-        "./app/Logo.png",
-        os.path.join(os.path.dirname(__file__), "Logo.png"),
-        "images/Logo.png",
-        "./images/Logo.png"
+        "Logo.PNG",
+        "./Logo.PNG",
+        "app/Logo.PNG",
+        "./app/Logo.PNG",
+        os.path.join(os.path.dirname(__file__), "Logo.PNG"),
+        "images/Logo.PNG",
+        "./images/Logo.PNG"
     ]
     
     for path in possible_paths:
@@ -238,7 +238,7 @@ def show_logo(container, width=240):
         logo_b64 = get_logo_base64()
         if logo_b64:
             container.markdown(
-                f'<img src="data:image/png;base64,{logo_b64}" width="{width}" style="display:block;margin:auto">',
+                f'<img src="data:image/PNG;base64,{logo_b64}" width="{width}" style="display:block;margin:auto">',
                 unsafe_allow_html=True
             )
         else:
@@ -664,7 +664,7 @@ def main_app():
             html_preview = f"""
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto;">
                 <div style="background: linear-gradient(135deg, #173887 0%, #2a5298 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                    {f'<img src="data:image/png;base64,{logo_b64}" alt="Logo" style="max-width: 120px; margin-bottom: 15px;">' if logo_b64 else '<div style="font-size: 40px; margin-bottom: 15px;">🏛️</div>'}
+                    {f'<img src="data:image/PNG;base64,{logo_b64}" alt="Logo" style="max-width: 120px; margin-bottom: 15px;">' if logo_b64 else '<div style="font-size: 40px; margin-bottom: 15px;">🏛️</div>'}
                     <h1 style="margin: 0; font-size: 24px;">{preview_data['company_name']}</h1>
                     <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">{preview_data['subject']}</p>
                 </div>
