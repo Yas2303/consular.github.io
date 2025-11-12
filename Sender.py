@@ -21,13 +21,10 @@ if not GMAIL_PASSWORD or GMAIL_PASSWORD == "votre_mot_de_passe":
 
 # CSS Global
 COMMON_CSS = """
-<style># Sauvegarder le contenu si nécessaire, puis
-git rm Sender.py
-# Recréez un fichier Sender.py propre# Recréez un fichier Sender.py propre
-CVCXV
+<style>
     :root {
-        --primary-color: #173887;
-        --secondary-color: #2a5298;
+        --primary-color: #0074D9;  /* Bleu */
+        --secondary-color: #7FDBFF; /* Bleu ciel */
         --light-color: #ffffff;
         --danger-color: #dc3545;
         --success-color: #28a745;
@@ -65,7 +62,7 @@ CVCXV
     .stButton > button:hover {
         background-color: var(--secondary-color) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(23, 56, 135, 0.3) !important;
+        box-shadow: 0 4px 12px rgba(0, 116, 217, 0.3) !important;
     }
     
     .logout-btn > button {
@@ -114,7 +111,7 @@ CVCXV
     .stTextInput > div > div > input:focus,
     .stTextArea > div > div > textarea:focus {
         border-color: var(--primary-color) !important;
-        box-shadow: 0 0 0 0.2rem rgba(23, 56, 135, 0.25) !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 116, 217, 0.25) !important;
     }
     
     .stTabs [data-baseweb="tab-list"] {
@@ -141,15 +138,6 @@ CVCXV
 # CSS pour la page de connexion
 LOGIN_CSS = """
 <style>
-    .login-main {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    
     .login-container {
         background: var(--light-color);
         border-radius: 20px;
@@ -157,6 +145,7 @@ LOGIN_CSS = """
         overflow: hidden;
         max-width: 900px;
         width: 100%;
+        margin: 0 auto;
     }
     
     .login-logo-section {
@@ -177,7 +166,7 @@ LOGIN_CSS = """
     }
     
     .login-title {
-        color: #173887;
+        color: #0074D9;
         font-size: 2.2rem;
         font-weight: 700;
         margin-bottom: 10px;
@@ -238,11 +227,10 @@ def show_logo(container, width=240):
         logo_b64 = get_logo_base64()
         if logo_b64:
             container.markdown(
-                f'<img src="data:image/PNG;base64,{logo_b64}" width="{width}" style="display:block;margin:auto">',
+                f'<img src="data:images/PNG;base64,{logo_b64}" width="{width}" style="display:block;margin:auto">',
                 unsafe_allow_html=True
             )
         else:
-            # Fallback avec emoji professionnel
             container.markdown(
                 f'<div style="font-size: {width//3}px; color: var(--primary-color); text-align: center; margin: 20px 0;">🏛️</div>', 
                 unsafe_allow_html=True
@@ -275,22 +263,22 @@ def show_login_page():
     
     st.markdown(LOGIN_CSS, unsafe_allow_html=True)
     
-    st.markdown('<div class="login-main">', unsafe_allow_html=True)
-    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    # Container principal sans fond bleu
+    # st.markdown('<div class="login-container">', unsafe_allow_html=True)
     
-    col_logo, col_form = st.columns([1, 1.2])
+    col_logo, col_form = st.columns([0.6, 1.2])
     
     with col_logo:
-        st.markdown('<div class="login-logo-section">', unsafe_allow_html=True)
+         #st.markdown('<div class="login-logo-section">', unsafe_allow_html=True)
         show_logo(st, 240)
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_form:
-        st.markdown('<div class="login-form-section">', unsafe_allow_html=True)
+        # st.markdown('<div class="login-form-section">', unsafe_allow_html=True)
         
         st.markdown("""
             <h2 class="login-title">Consular Services</h2>
-            <p class="login-subtitle">Plateforme d'envoi d'emails professionnels</p>
+             
         """, unsafe_allow_html=True)
         
         with st.form("login_form", clear_on_submit=False):
@@ -307,7 +295,13 @@ def show_login_page():
                 label_visibility="collapsed"
             )
             
-            col_cancel, col_submit = st.columns(2)
+            col_submit ,col_cancel  = st.columns(2)
+            with col_submit:
+                submit_clicked = st.form_submit_button(
+                    "Se connecter", 
+                    use_container_width=True,
+                    type="primary"
+                )
             
             with col_cancel:
                 cancel_clicked = st.form_submit_button(
@@ -316,27 +310,57 @@ def show_login_page():
                     type="secondary"
                 )
             
-            with col_submit:
-                submit_clicked = st.form_submit_button(
-                    "Se connecter", 
-                    use_container_width=True,
-                    type="primary"
-                )
+            
             
             if submit_clicked:
-                if username == "Admin" and password == "Admin":
+                if username == "Admin" and password == "Admin10":
                     st.session_state.authenticated = True
                     st.rerun()
                 else:
                     st.markdown(
-                        '<div class="login-error">Identifiants incorrects. Utilisez Admin/Admin</div>', 
+                        '<div class="login-error">Identifiants incorrects</div>', 
                         unsafe_allow_html=True
                     )
 
         st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+
+# Ajoutez ce CSS personnalisé pour modifier les couleurs des boutons
+LOGIN_CSS = """
+<style>
+    /* Style pour le bouton Se connecter (couleur #173887) */
+    .stButton > button[kind="primary"] {
+        background-color: #173887 !important;
+        color: white !important;
+        border: 1px solid #173887 !important;
+    }
+    
+    .stButton > button[kind="primary"]:hover {
+        background-color: #1a43b0 !important;
+        border: 1px solid #1a43b0 !important;
+    }
+    
+    /* Style pour le bouton Annuler (couleur blanc/gris) */
+    .stButton > button[kind="secondary"] {
+        background-color: white !important;
+        color: #666666 !important;
+        border: 1px solid #cccccc !important;
+    }
+    
+    .stButton > button[kind="secondary"]:hover {
+        background-color: #f8f9fa !important;
+        border: 1px solid #aaaaaa !important;
+    }
+    
+    /* Couleur pour le titre Consular Services */
+    .login-title {
+        color: #173887 !important;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+</style>
+"""
 
 def test_gmail_connection():
     """Teste la connexion à Gmail"""
@@ -351,13 +375,9 @@ def test_gmail_connection():
     except Exception as e:
         return False, f"Erreur de connexion: {str(e)}"
 
-
-
-
 def send_email_direct(to_email, subject, template_vars):
     """Envoie un email avec logo intégré - PAS DE IMGBB !"""
     try:
-        # Logo simple en code direct - PAS BESOIN D'UPLOAD
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -379,7 +399,7 @@ def send_email_direct(to_email, subject, template_vars):
                     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
                 }}
                 .header {{
-                    background: #173887;
+                    background: #0074D9;
                     color: white;
                     padding: 20px;
                     text-align: center;
@@ -399,7 +419,7 @@ def send_email_direct(to_email, subject, template_vars):
                 }}
                 .info-box {{
                     background: #f8f9fa;
-                    border-left: 4px solid #173887;
+                    border-left: 4px solid #0074D9;
                     padding: 15px;
                     margin: 20px 0;
                 }}
@@ -410,7 +430,7 @@ def send_email_direct(to_email, subject, template_vars):
                 }}
                 .sender-name {{
                     font-weight: bold;
-                    color: #173887;
+                    color: #0074D9;
                 }}
                 .footer {{
                     background: #f8f9fa;
@@ -459,7 +479,6 @@ def send_email_direct(to_email, subject, template_vars):
         </html>
         """
 
-        # Version texte
         text_content = f"""
 SERVICES CONSULAIRES
 {'=' * 20}
@@ -481,7 +500,6 @@ Téléphone: {template_vars.get('contact_phone', '')}
 {template_vars.get('company_address', '')}
         """
 
-        # Création du message
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
         msg['From'] = f"Services Consulaires <{GMAIL_USER}>"
@@ -490,7 +508,6 @@ Téléphone: {template_vars.get('contact_phone', '')}
         msg.attach(MIMEText(text_content, 'plain'))
         msg.attach(MIMEText(html_content, 'html'))
 
-        # Envoyer l'email
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(GMAIL_USER, GMAIL_PASSWORD)
@@ -513,12 +530,10 @@ def main_app():
 
     st.markdown(COMMON_CSS, unsafe_allow_html=True)
 
-    # Header
     col1, col2, col3 = st.columns([3, 1, 1])
     with col1:
         st.markdown('<div class="main-header">Consular Services - Plateforme d\'envoi d\'emails</div>', unsafe_allow_html=True)
 
-    # Sidebar
     with st.sidebar:
         show_logo(st.sidebar, 200)
         
@@ -537,7 +552,6 @@ def main_app():
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Interface principale
     tab1, tab2, tab3 = st.tabs(["📝 Composition", "👀 Prévisualisation", "📊 Historique"])
 
     with tab1:
@@ -589,7 +603,7 @@ def main_app():
             
             st.markdown("---")
             
-            if st.button("🚀 Envoyer l'email", type="primary", use_container_width=True, disabled=not connection_success):
+            if st.button("Envoyer l'email", type="primary", use_container_width=True, disabled=not connection_success):
                 if not all([to_email, recipient_name, subject, message_content]):
                     st.markdown('<div class="error-message">Veuillez remplir tous les champs obligatoires (*)</div>', unsafe_allow_html=True)
                 else:
@@ -663,8 +677,8 @@ def main_app():
             
             html_preview = f"""
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #173887 0%, #2a5298 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                    {f'<img src="data:image/PNG;base64,{logo_b64}" alt="Logo" style="max-width: 120px; margin-bottom: 15px;">' if logo_b64 else '<div style="font-size: 40px; margin-bottom: 15px;">🏛️</div>'}
+                <div style="background: linear-gradient(135deg, #0074D9 0%, #7FDBFF 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                    {f'<img src="data:images/PNG;base64,{logo_b64}" alt="Logo" style="max-width: 120px; margin-bottom: 15px;">' if logo_b64 else '<div style="font-size: 40px; margin-bottom: 15px;">🏛️</div>'}
                     <h1 style="margin: 0; font-size: 24px;">{preview_data['company_name']}</h1>
                     <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">{preview_data['subject']}</p>
                 </div>
@@ -676,12 +690,12 @@ def main_app():
                         {preview_data['message_content']}
                     </div>
                     
-                    {f'<div style="background: #f8f9fa; border-left: 4px solid #173887; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;"><strong>Informations importantes:</strong><br>{preview_data.get("additional_info", "")}</div>' if preview_data.get('additional_info') else ''}
+                    {f'<div style="background: #f8f9fa; border-left: 4px solid #0074D9; padding: 15px; margin: 15px 0; border-radius: 0 8px 8px 0;"><strong>Informations importantes:</strong><br>{preview_data.get("additional_info", "")}</div>' if preview_data.get('additional_info') else ''}
                     
-                    {f'<div style="text-align: center; margin: 25px 0;"><a href="{preview_data["call_to_action_url"]}" style="background: linear-gradient(135deg, #173887 0%, #2a5298 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block;">{preview_data["call_to_action_text"]}</a></div>' if preview_data.get('call_to_action_url') and preview_data.get('call_to_action_text') else ''}
+                    {f'<div style="text-align: center; margin: 25px 0;"><a href="{preview_data["call_to_action_url"]}" style="background: linear-gradient(135deg, #0074D9 0%, #7FDBFF 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 25px; display: inline-block;">{preview_data["call_to_action_text"]}</a></div>' if preview_data.get('call_to_action_url') and preview_data.get('call_to_action_text') else ''}
                     
                     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eaeaea;">
-                        <p style="margin: 5px 0; color: #173887; font-weight: 600;">{preview_data['sender_name']}</p>
+                        <p style="margin: 5px 0; color: #0074D9; font-weight: 600;">{preview_data['sender_name']}</p>
                         <p style="margin: 5px 0;">{preview_data['company_name']}</p>
                         <p style="margin: 5px 0;">Email: {preview_data['contact_email']}</p>
                         <p style="margin: 5px 0;">Téléphone: {preview_data['contact_phone']}</p>
@@ -723,7 +737,6 @@ def main_app():
                     if i < len(emails_data) - 1:
                         st.markdown("---")
 
-    # Footer
     st.markdown("---")
     st.markdown(
         '<div style="text-align: center; color: #666; font-size: 14px;">'
