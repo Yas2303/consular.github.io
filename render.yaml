@@ -1,0 +1,26 @@
+<<<<<<< HEAD
+services:
+  - type: web
+    name: consular-services
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run votre_app.py --server.port=$PORT --server.address=0.0.0.0
+    envVars:
+      - key: GMAIL_USER
+        value: consular.services.infos@gmail.com
+      - key: GMAIL_PASSWORD
+=======
+services:
+  - type: web
+    name: consular-services
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run votre_app.py --server.port=$PORT --server.address=0.0.0.0
+    envVars:
+      - key: GMAIL_USER
+        value: consular.services.infos@gmail.com
+      - key: GMAIL_PASSWORD
+>>>>>>> ba3058378dee71b1a95fe6c4ef390310c261661d
+        value: ocwo vozn pskp copd

@@ -1,0 +1,10 @@
+<<<<<<< HEAD
+streamlit==1.28.0
+requests==2.31.0
+jinja2==3.1.2
+=======
+streamlit==1.28.0
+requests==2.31.0
+jinja2==3.1.2
+>>>>>>> ba3058378dee71b1a95fe6c4ef390310c261661d
+Pillow>=10.0.0
