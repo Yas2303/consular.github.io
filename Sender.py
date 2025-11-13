@@ -10,188 +10,41 @@ import base64
 import os
 from pathlib import Path
 from PIL import Image
+from twilio.rest import Client  # Ajout pour Twilio
 
-# Configuration Gmail
 GMAIL_USER = os.environ.get("GMAIL_USER", "consular.services.infos@gmail.com")
 GMAIL_PASSWORD = os.environ.get("GMAIL_PASSWORD", "ocwo vozn pskp copd")
 
-# Vérification au démarrage
+# Configuration Twilio
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "")
+TWILIO_PHONE_NUMBER = os.environ.get("TWILIO_PHONE_NUMBER", "")
+
 if not GMAIL_PASSWORD or GMAIL_PASSWORD == "votre_mot_de_passe":
     st.error("⚠️ Configuration Gmail manquante. Vérifiez les variables d'environnement.")
 
-# CSS Global
-COMMON_CSS = """
-<style>
-    :root {
-        --primary-color: #0074D9;  /* Bleu */
-        --secondary-color: #7FDBFF; /* Bleu ciel */
-        --light-color: #ffffff;
-        --danger-color: #dc3545;
-        --success-color: #28a745;
-        --warning-color: #ffc107;
-    }
-    
-    .main-header {
-        font-size: 2.5rem;
-        color: var(--primary-color);
-        text-align: center;
-        margin-bottom: 2rem;
-        font-weight: 700;
-    }
-    
-    .section-header {
-        color: var(--primary-color);
-        border-bottom: 2px solid var(--primary-color);
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-        font-size: 1.4rem;
-        font-weight: 600;
-    }
-    
-    .stButton > button {
-        background-color: var(--primary-color) !important;
-        color: var(--light-color) !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 12px 24px !important;
-        font-weight: 600 !important;
-        font-size: 14px !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .stButton > button:hover {
-        background-color: var(--secondary-color) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(0, 116, 217, 0.3) !important;
-    }
-    
-    .logout-btn > button {
-        background-color: var(--danger-color) !important;
-    }
-    
-    .logout-btn > button:hover {
-        background-color: #c82333 !important;
-    }
-    
-    .success-message {
-        background-color: #d4edda;
-        color: var(--success-color);
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #c3e6cb;
-        margin: 10px 0;
-    }
-    
-    .error-message {
-        background-color: #f8d7da;
-        color: var(--danger-color);
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #f5c6cb;
-        margin: 10px 0;
-    }
-    
-    .warning-message {
-        background-color: #fff3cd;
-        color: #856404;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #ffeaa7;
-        margin: 10px 0;
-    }
-    
-    .stTextInput > div > div > input,
-    .stTextArea > div > div > textarea {
-        border: 2px solid #e9ecef !important;
-        border-radius: 8px !important;
-        padding: 12px !important;
-        font-size: 14px !important;
-    }
-    
-    .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus {
-        border-color: var(--primary-color) !important;
-        box-shadow: 0 0 0 0.2rem rgba(0, 116, 217, 0.25) !important;
-    }
-    
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: #f8f9fa;
-        border-radius: 8px 8px 0px 0px;
-        gap: 8px;
-        padding: 12px 24px;
-        font-weight: 600;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background-color: var(--primary-color) !important;
-        color: white !important;
-    }
-</style>
-"""
-
-# CSS pour la page de connexion
-LOGIN_CSS = """
-<style>
-    .login-container {
-        background: var(--light-color);
-        border-radius: 20px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        max-width: 900px;
-        width: 100%;
-        margin: 0 auto;
-    }
-    
-    .login-logo-section {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        padding: 50px 30px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-    
-    .login-form-section {
-        padding: 50px 40px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    
-    .login-title {
-        color: #0074D9;
-        font-size: 2.2rem;
-        font-weight: 700;
-        margin-bottom: 10px;
-        text-align: center;
-    }
-    
-    .login-subtitle {
-        color: #6c757d;
-        font-size: 1.1rem;
-        margin-bottom: 40px;
-        text-align: center;
-    }
-    
-    .login-error {
-        background-color: #f8d7da;
-        color: var(--danger-color);
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid #f5c6cb;
-        margin: 15px 0;
-        text-align: center;
-        font-weight: 500;
-    }
-</style>
-"""
+def load_css():
+    """Charge le CSS depuis le fichier externe"""
+    try:
+        # Chemin direct dans le même répertoire
+        css_path = os.path.join(os.path.dirname(__file__), "style.css")
+        
+        if os.path.exists(css_path):
+            with open(css_path, 'r', encoding='utf-8') as f:
+                css_content = f.read()
+            st.markdown(f'<style>{css_content}</style>', unsafe_allow_html=True)
+        else:
+            # Fallback CSS
+            st.markdown("""
+            <style>
+                .main-header { color: #0074D9; text-align: center; }
+                .stButton > button { background-color: #0074D9; color: white; }
+            </style>
+            """, unsafe_allow_html=True)
+            st.warning(f"Fichier CSS non trouvé à: {css_path}")
+            
+    except Exception as e:
+        st.error(f"Erreur lors du chargement du CSS: {e}")
 
 def get_logo_path():
     """Retourne le chemin correct vers le logo"""
@@ -227,7 +80,7 @@ def show_logo(container, width=240):
         logo_b64 = get_logo_base64()
         if logo_b64:
             container.markdown(
-                f'<img src="data:images/PNG;base64,{logo_b64}" width="{width}" style="display:block;margin:auto">',
+                f'<img src="data:image/png;base64,{logo_b64}" width="{width}" style="display:block;margin:auto">',
                 unsafe_allow_html=True
             )
         else:
@@ -261,26 +114,21 @@ def show_login_page():
         layout="centered"
     )
     
-    st.markdown(LOGIN_CSS, unsafe_allow_html=True)
-    
-    # Container principal sans fond bleu
-    # st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    # Charger le CSS unifié
+    load_css()
     
     col_logo, col_form = st.columns([0.6, 1.2])
     
     with col_logo:
-         #st.markdown('<div class="login-logo-section">', unsafe_allow_html=True)
         show_logo(st, 240)
-        st.markdown('</div>', unsafe_allow_html=True)
 
     with col_form:
-        # st.markdown('<div class="login-form-section">', unsafe_allow_html=True)
-        
         st.markdown("""
-            <h2 class="login-title">Consular Services</h2>
-             
-        """, unsafe_allow_html=True)
-        
+        <h3 class="login-title">Consular Services Informations</h3>
+        <p style="text-align: center; font-weight: bold; color: #495057; margin-top: -10px; margin-bottom: 30px;">
+            Plateforme d'envoi de mails
+        </p>
+    """, unsafe_allow_html=True)
         with st.form("login_form", clear_on_submit=False):
             username = st.text_input(
                 "Nom d'utilisateur", 
@@ -295,7 +143,7 @@ def show_login_page():
                 label_visibility="collapsed"
             )
             
-            col_submit ,col_cancel  = st.columns(2)
+            col_submit, col_cancel = st.columns(2)
             with col_submit:
                 submit_clicked = st.form_submit_button(
                     "Se connecter", 
@@ -310,8 +158,6 @@ def show_login_page():
                     type="secondary"
                 )
             
-            
-            
             if submit_clicked:
                 if username == "Admin" and password == "Admin10":
                     st.session_state.authenticated = True
@@ -321,46 +167,6 @@ def show_login_page():
                         '<div class="login-error">Identifiants incorrects</div>', 
                         unsafe_allow_html=True
                     )
-
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Ajoutez ce CSS personnalisé pour modifier les couleurs des boutons
-LOGIN_CSS = """
-<style>
-    /* Style pour le bouton Se connecter (couleur #173887) */
-    .stButton > button[kind="primary"] {
-        background-color: #173887 !important;
-        color: white !important;
-        border: 1px solid #173887 !important;
-    }
-    
-    .stButton > button[kind="primary"]:hover {
-        background-color: #1a43b0 !important;
-        border: 1px solid #1a43b0 !important;
-    }
-    
-    /* Style pour le bouton Annuler (couleur blanc/gris) */
-    .stButton > button[kind="secondary"] {
-        background-color: white !important;
-        color: #666666 !important;
-        border: 1px solid #cccccc !important;
-    }
-    
-    .stButton > button[kind="secondary"]:hover {
-        background-color: #f8f9fa !important;
-        border: 1px solid #aaaaaa !important;
-    }
-    
-    /* Couleur pour le titre Consular Services */
-    .login-title {
-        color: #173887 !important;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-</style>
-"""
 
 def test_gmail_connection():
     """Teste la connexion à Gmail"""
@@ -375,77 +181,97 @@ def test_gmail_connection():
     except Exception as e:
         return False, f"Erreur de connexion: {str(e)}"
 
-def send_email_direct(to_email, subject, template_vars):
-    """Envoie un email avec logo intégré - PAS DE IMGBB !"""
+def test_twilio_connection():
+    """Teste la connexion à Twilio"""
     try:
+        if not all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER]):
+            return False, "Configuration Twilio incomplète. Vérifiez les variables d'environnement."
+        
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        # Test simple de la connexion en récupérant les informations du compte
+        account = client.api.accounts(TWILIO_ACCOUNT_SID).fetch()
+        return True, f"Connexion Twilio réussie - Compte: {account.friendly_name}"
+    except Exception as e:
+        return False, f"Erreur de connexion Twilio: {str(e)}"
+
+def send_sms_twilio(to_phone, message_body):
+    """Envoie un SMS via Twilio"""
+    try:
+        if not all([TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER]):
+            return False, "Configuration Twilio manquante"
+        
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        
+        # Formatage du numéro (ajout du + si absent)
+        if not to_phone.startswith('+'):
+            to_phone = '+' + to_phone
+        
+        message = client.messages.create(
+            body=message_body,
+            from_=TWILIO_PHONE_NUMBER,
+            to=to_phone
+        )
+        
+        return True, f"✅ SMS envoyé avec succès à {to_phone} (SID: {message.sid})"
+    
+    except Exception as e:
+        return False, f"❌ Erreur lors de l'envoi du SMS: {str(e)}"
+
+def send_email_direct(to_email, subject, template_vars):
+    """Envoie un email avec logo intégré (remplace l'icône 🏛️ par Logo.PNG)"""
+    try:
+        # 1. Préparation du message MIME
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"{template_vars.get('company_name', 'Services Consulaires')} <{GMAIL_USER}>"
+        msg['To'] = to_email
+        
+        # Définir l'URL/CID du logo et la partie MIME correspondante
+        logo_html_tag = '<div class="logo">🏛️</div>'  # Par défaut, utilise l'icône
+        logo_attachment = None
+        
+        logo_path = get_logo_path()
+        if logo_path:
+            with open(logo_path, 'rb') as fp:
+                logo_attachment = MIMEImage(fp.read(), _subtype='png')
+                logo_attachment.add_header('Content-ID', '<logo_cid>')
+                # Important: l'ID doit correspondre à ce qui est utilisé dans la balise <img>
+                logo_html_tag = '<img src="cid:logo_cid" alt="Logo Consulaire" style="max-width: 80px; height: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">'
+        
+        # 2. Construction du contenu HTML
         html_content = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="UTF-8">
             <style>
-                body {{
-                    font-family: Arial, sans-serif;
-                    margin: 0;
-                    padding: 0;
-                    background-color: #f4f4f4;
-                }}
-                .email-container {{
-                    max-width: 600px;
-                    margin: 0 auto;
-                    background: white;
-                    border-radius: 10px;
-                    overflow: hidden;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                }}
-                .header {{
-                    background: #0074D9;
-                    color: white;
-                    padding: 20px;
-                    text-align: center;
-                }}
-                .logo {{
-                    font-size: 32px;
-                    margin-bottom: 10px;
-                }}
-                .header h1 {{
-                    margin: 0;
-                    font-size: 22px;
-                }}
-                .content {{
-                    padding: 30px;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                .info-box {{
-                    background: #f8f9fa;
-                    border-left: 4px solid #0074D9;
-                    padding: 15px;
-                    margin: 20px 0;
-                }}
-                .signature {{
-                    margin-top: 30px;
-                    padding-top: 20px;
-                    border-top: 1px solid #eee;
-                }}
-                .sender-name {{
-                    font-weight: bold;
-                    color: #0074D9;
-                }}
-                .footer {{
-                    background: #f8f9fa;
-                    padding: 20px;
-                    text-align: center;
-                    color: #666;
-                    font-size: 12px;
+                /* Styles conservés pour la mise en page de l'e-mail */
+                body {{ font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }}
+                .email-container {{ max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+                .header {{ background: #0074D9; color: white; padding: 20px; text-align: center; }}
+                /* Le style .logo est maintenant moins pertinent s'il s'agit d'une image */
+                .header h1 {{ margin: 0; font-size: 22px; }}
+                .content {{ padding: 30px; line-height: 1.6; color: #333; }}
+                .info-box {{ background: #f8f9fa; border-left: 4px solid #0074D9; padding: 15px; margin: 20px 0; }}
+                .signature {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; }}
+                .sender-name {{ font-weight: bold; color: #0074D9; }}
+                .footer {{ background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px; }}
+                .message-content img {{ max-width: 100%; height: auto; }}
+                .action-button a {{ 
+                    display: inline-block; 
+                    background-color: #0074D9; 
+                    color: white; 
+                    padding: 10px 20px; 
+                    text-decoration: none; 
+                    border-radius: 5px; 
+                    margin-top: 15px;
                 }}
             </style>
         </head>
         <body>
             <div class="email-container">
                 <div class="header">
-                    <div class="logo">🏛️</div>
-                    <h1>{template_vars.get('company_name', 'Services Consulaires')}</h1>
+                    {logo_html_tag} <h1>{template_vars.get('company_name', 'Services Consulaires')}</h1>
                     <p><strong>{subject}</strong></p>
                 </div>
                 
@@ -460,7 +286,16 @@ def send_email_direct(to_email, subject, template_vars):
                     
                     {f'<div class="info-box"><strong>Informations importantes:</strong><br>{template_vars.get("additional_info", "").replace(chr(10), "<br>")}</div>' if template_vars.get('additional_info') else ''}
                     
+                    {f"""
+                    <div class="action-button" style="text-align: center;">
+                        <a href="{template_vars.get('call_to_action_url', '#')}" target="_blank">
+                            {template_vars.get('call_to_action_text', 'Aller à l\'action')}
+                        </a>
+                    </div>
+                    """ if template_vars.get('call_to_action_url') and template_vars.get('call_to_action_text') else ''}
+
                     <div class="signature">
+                        <p>Cordialement,</p>
                         <p class="sender-name">{template_vars.get('sender_name', 'Service Consulaire')}</p>
                         <p><strong>{template_vars.get('company_name', 'Services Consulaires')}</strong></p>
                         <p>Email: {template_vars.get('contact_email', 'consular.services.infos@gmail.com')}</p>
@@ -472,13 +307,14 @@ def send_email_direct(to_email, subject, template_vars):
                 <div class="footer">
                     <strong>{template_vars.get('company_name', 'Services Consulaires')}</strong><br>
                     {template_vars.get('company_address', '')}<br><br>
-                    &copy; 2024 {template_vars.get('company_name', 'Services Consulaires')}. Tous droits réservés.
+                    &copy; {datetime.now().year} {template_vars.get('company_name', 'Services Consulaires')}. Tous droits réservés.
                 </div>
             </div>
         </body>
         </html>
         """
 
+        # 3. Construction du contenu Texte (pour les clients sans HTML)
         text_content = f"""
 SERVICES CONSULAIRES
 {'=' * 20}
@@ -491,6 +327,8 @@ Bonjour {template_vars.get('recipient_name', '')},
 
 {f"INFORMATIONS IMPORTANTES:\n{template_vars.get('additional_info', '')}" if template_vars.get('additional_info') else ""}
 
+{f"Action: {template_vars.get('call_to_action_text', 'Lien')}: {template_vars.get('call_to_action_url', '#')}" if template_vars.get('call_to_action_url') else ''}
+
 Cordialement,
 {template_vars.get('sender_name', 'Service Consulaire')}
 {template_vars.get('company_name', 'Services Consulaires')}
@@ -500,13 +338,14 @@ Téléphone: {template_vars.get('contact_phone', '')}
 {template_vars.get('company_address', '')}
         """
 
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = f"Services Consulaires <{GMAIL_USER}>"
-        msg['To'] = to_email
-        
+        # 4. Assemblage final et envoi
         msg.attach(MIMEText(text_content, 'plain'))
-        msg.attach(MIMEText(html_content, 'html'))
+        # Ajout de la partie HTML
+        html_part = MIMEMultipart('related')
+        html_part.attach(MIMEText(html_content, 'html'))
+        if logo_attachment:
+            html_part.attach(logo_attachment) # Ajoute le logo comme image liée
+        msg.attach(html_part)
 
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
@@ -517,22 +356,23 @@ Téléphone: {template_vars.get('contact_phone', '')}
         return True, f"✅ Email envoyé avec succès à {to_email}"
         
     except Exception as e:
-        return False, f"❌ Erreur: {str(e)}"
+        return False, f"❌ Erreur lors de l'envoi de l'e-mail: {str(e)}"
 
 def main_app():
     """Interface principale après authentification"""
     st.set_page_config(
-        page_title="Consular Services - Envoi d'Emails",
+        page_title="Consular Services - Envoi d'Emails & SMS",
         page_icon="📧",
         layout="wide",
         initial_sidebar_state="expanded"
     )
 
-    st.markdown(COMMON_CSS, unsafe_allow_html=True)
+    # Charger le CSS unifié
+    load_css()
 
     col1, col2, col3 = st.columns([3, 1, 1])
     with col1:
-        st.markdown('<div class="main-header">Consular Services - Plateforme d\'envoi d\'emails</div>', unsafe_allow_html=True)
+        st.markdown('<div class="main-header">Consular Services - Plateforme d\'envoi d\'emails et SMS</div>', unsafe_allow_html=True)
 
     with st.sidebar:
         show_logo(st.sidebar, 200)
@@ -552,7 +392,8 @@ def main_app():
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    tab1, tab2, tab3 = st.tabs(["📝 Composition", "👀 Prévisualisation", "📊 Historique"])
+    # Ajout de l'onglet SMS
+    tab1, tab2, tab3, tab4 = st.tabs(["📝 Composition Email", "👀 Prévisualisation", "📱 Envoi SMS", "📊 Historique"])
 
     with tab1:
         connection_success, connection_message = test_gmail_connection()
@@ -634,7 +475,8 @@ def main_app():
                             'to_email': to_email,
                             'subject': subject,
                             'recipient_name': recipient_name,
-                            'success': True
+                            'success': True,
+                            'type': 'email'
                         })
                     else:
                         st.markdown(f'<div class="error-message">{message}</div>', unsafe_allow_html=True)
@@ -678,7 +520,7 @@ def main_app():
             html_preview = f"""
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto;">
                 <div style="background: linear-gradient(135deg, #0074D9 0%, #7FDBFF 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                    {f'<img src="data:images/PNG;base64,{logo_b64}" alt="Logo" style="max-width: 120px; margin-bottom: 15px;">' if logo_b64 else '<div style="font-size: 40px; margin-bottom: 15px;">🏛️</div>'}
+                    {f'<img src="data:image/png;base64,{logo_b64}" alt="Logo" style="max-width: 120px; margin-bottom: 15px;">' if logo_b64 else '<div style="font-size: 40px; margin-bottom: 15px;">🏛️</div>'}
                     <h1 style="margin: 0; font-size: 24px;">{preview_data['company_name']}</h1>
                     <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">{preview_data['subject']}</p>
                 </div>
@@ -709,38 +551,143 @@ def main_app():
             st.components.v1.html(html_preview, height=600, scrolling=True)
 
     with tab3:
+        st.markdown('<div class="section-header">Envoi de SMS via Twilio</div>', unsafe_allow_html=True)
+        
+        # Test de connexion Twilio
+        twilio_success, twilio_message = test_twilio_connection()
+        if not twilio_success:
+            st.markdown(f'<div class="warning-message">{twilio_message}</div>', unsafe_allow_html=True)
+            st.info("""
+            **Configuration requise pour Twilio:**
+            - TWILIO_ACCOUNT_SID : Votre SID de compte Twilio
+            - TWILIO_AUTH_TOKEN : Votre token d'authentification Twilio  
+            - TWILIO_PHONE_NUMBER : Votre numéro de téléphone Twilio (format: +33612345678)
+            
+            Ces variables doivent être définies dans les variables d'environnement.
+            """)
+        else:
+            st.markdown(f'<div class="success-message">{twilio_message}</div>', unsafe_allow_html=True)
+        
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.markdown('<div class="section-header">Destinataire</div>', unsafe_allow_html=True)
+            
+            to_phone = st.text_input(
+                "Numéro de téléphone*", 
+                placeholder="+33612345678",
+                key="to_phone",
+                help="Format international requis (ex: +33 pour la France)"
+            )
+            
+            recipient_name_sms = st.text_input(
+                "Nom du destinataire*", 
+                placeholder="Jean Dupont", 
+                key="recipient_name_sms"
+            )
+            
+            st.markdown('<div class="section-header">Expéditeur</div>, unsafe_allow_html=True>')
+            
+            sms_sender_name = st.text_input(
+                "Nom de l'expéditeur", 
+                value=default_sender,
+                key="sms_sender_name"
+            )
+
+        with col2:
+            st.markdown('<div class="section-header">Message SMS</div>, unsafe_allow_html=True>')
+            
+            sms_message = st.text_area(
+                "Message SMS*", 
+                height=200,
+                placeholder=f"Bonjour [Nom],\n\nNous vous confirmons votre rendez-vous consulaire pour le [date] à [heure].\n\nLieu: Ambassade de France\nAdresse: {default_address}\n\nMerci de vous présenter avec les documents requis.\n\nCordialement,\n{default_sender}",
+                key="sms_message",
+                help="Limite: 1600 caractères. Les SMS longs peuvent être facturés comme plusieurs messages."
+            )
+            
+            # Compteur de caractères
+            if sms_message:
+                char_count = len(sms_message)
+                sms_count = (char_count // 160) + 1 if char_count % 160 != 0 else char_count // 160
+                st.caption(f"Caractères: {char_count}/1600 | SMS: {sms_count}")
+                
+                if char_count > 1600:
+                    st.error("⚠️ Le message dépasse la limite de 1600 caractères")
+            
+            st.markdown("---")
+            
+            if st.button("Envoyer le SMS", type="primary", use_container_width=True, disabled=not twilio_success):
+                if not all([to_phone, recipient_name_sms, sms_message]):
+                    st.markdown('<div class="error-message">Veuillez remplir tous les champs obligatoires (*)</div>', unsafe_allow_html=True)
+                elif len(sms_message) > 1600:
+                    st.markdown('<div class="error-message">Le message est trop long (max 1600 caractères)</div>', unsafe_allow_html=True)
+                else:
+                    # Personnalisation du message avec le nom du destinataire
+                    personalized_message = sms_message.replace("[Nom]", recipient_name_sms)
+                    
+                    with st.spinner("Envoi du SMS en cours..."):
+                        success, message = send_sms_twilio(to_phone, personalized_message)
+                    
+                    if success:
+                        st.markdown(f'<div class="success-message">{message}</div>', unsafe_allow_html=True)
+                        if 'sent_emails' not in st.session_state:
+                            st.session_state.sent_emails = []
+                        st.session_state.sent_emails.append({
+                            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            'to_phone': to_phone,
+                            'recipient_name': recipient_name_sms,
+                            'message_preview': personalized_message[:50] + "..." if len(personalized_message) > 50 else personalized_message,
+                            'success': True,
+                            'type': 'sms'
+                        })
+                    else:
+                        st.markdown(f'<div class="error-message">{message}</div>', unsafe_allow_html=True)
+
+    with tab4:
         st.markdown('<div class="section-header">Historique des envois</div>', unsafe_allow_html=True)
         
         if 'sent_emails' not in st.session_state or not st.session_state.sent_emails:
-            st.info("Aucun email envoyé pour le moment")
+            st.info("Aucun message envoyé pour le moment")
         else:
-            emails_data = list(reversed(st.session_state.sent_emails))
+            messages_data = list(reversed(st.session_state.sent_emails))
             
-            for i, email in enumerate(emails_data):
+            for i, message in enumerate(messages_data):
                 with st.container():
-                    col1, col2, col3 = st.columns([2, 2, 1])
+                    col1, col2, col3, col4 = st.columns([2, 2, 1, 1])
                     
                     with col1:
-                        st.write(f"**À:** {email['to_email']}")
-                        st.write(f"**Nom:** {email['recipient_name']}")
+                        if message['type'] == 'email':
+                            st.write(f"**À:** {message['to_email']}")
+                        else:
+                            st.write(f"**À:** {message['to_phone']}")
+                        st.write(f"**Nom:** {message['recipient_name']}")
                     
                     with col2:
-                        st.write(f"**Sujet:** {email['subject']}")
-                        st.write(f"**Date:** {email['timestamp']}")
+                        if message['type'] == 'email':
+                            st.write(f"**Sujet:** {message['subject']}")
+                        else:
+                            st.write(f"**Message:** {message['message_preview']}")
+                        st.write(f"**Date:** {message['timestamp']}")
                     
                     with col3:
-                        if email['success']:
+                        if message['type'] == 'email':
+                            st.write("**Type:** 📧 Email")
+                        else:
+                            st.write("**Type:** 📱 SMS")
+                    
+                    with col4:
+                        if message['success']:
                             st.success("✅ Envoyé")
                         else:
                             st.error("❌ Échec")
                     
-                    if i < len(emails_data) - 1:
+                    if i < len(messages_data) - 1:
                         st.markdown("---")
 
     st.markdown("---")
     st.markdown(
         '<div style="text-align: center; color: #666; font-size: 14px;">'
-        "Consular Services Email Platform • "
+        "Consular Services Email & SMS Platform • "
         "consular.services.infos@gmail.com • "
         f"© {datetime.now().year} Tous droits réservés"
         "</div>", 
